@@ -1,5 +1,5 @@
 import argparse
-import re
+import sys
 
 import bs4
 
@@ -8,24 +8,32 @@ def parse_cli_arguments():
     my_parser = argparse.ArgumentParser(description='Add Link to the favorites link page')
 
     # Add the arguments
-    my_parser.add_argument('group',
-                        metavar='group',
+    my_parser.add_argument('-g',
+                        metavar='--group',
                         type=str,
-                        help='The group the link should be added to.')
+                        help='The group the link should be added to.',
+                        required=True)
                         
-    my_parser.add_argument('name',
-                        metavar='name',
+    my_parser.add_argument('-n',
+                        metavar='--name',
                         type=str,
-                        help='The name displayed for the link.')
+                        help='The name displayed for the link.',
+                        required=True)
 
-    my_parser.add_argument('link',
-                        metavar='link',
+    my_parser.add_argument('-a',
+                        metavar='--link',
                         type=str,
-                        help='The full link to the page.')
+                        help='The full link to the page.',
+                        required=True)
+    
+    my_parser.add_argument('-l',
+                        help='Flag, if present it lists all groups currently present in the html file.',
+                        action='store_true')
 
 
     # Execute the parse_args() method
     args = my_parser.parse_args()
+    print(args)
 
     return args
 
@@ -55,8 +63,6 @@ def create_group_if_not_exists(group: str, soup):
         soup.body.div.append(new_div_group_tag)
     else:
         existing_groups[-1].insert_after(new_div_group_tag)
-    
-
 
 def create_new_favorite_a_tag(link: str, name: str, soup):
     new_a_tag = soup.new_tag("a", href=link, target="_blank")
@@ -67,18 +73,32 @@ def save_soup_to_html_file(soup):
     with open("favorites_page.html", "w") as outf:
         outf.write(str(soup))
 
+def find_all_current_groups(soup):
+    existing_groups_html = soup.find_all("h2")
+    existing_groups = []
+    for group_html in existing_groups_html:
+        existing_groups.append(group_html.string)
+    return existing_groups
+
 def main():
     args = parse_cli_arguments()
 
     soup = load_html_file()
 
-    original_found_tag = find_group_in_soup(group=args.group, soup=soup)
+    # is the -l flag set?
+    if args.l == True:
+        print("\nThese groups are already present in the html file:")
+        groups = find_all_current_groups(soup=soup)
+        for group in groups:
+            print(f"\t{group}")
+
+    original_found_tag = find_group_in_soup(group=args.g, soup=soup)
 
     if original_found_tag is None:
-        create_group_if_not_exists(group=args.group, soup=soup)
-        original_found_tag = find_group_in_soup(group=args.group, soup=soup)
+        create_group_if_not_exists(group=args.g, soup=soup)
+        original_found_tag = find_group_in_soup(group=args.g, soup=soup)
 
-    new_a_tag = create_new_favorite_a_tag(link=args.link, name=args.name, soup=soup)
+    new_a_tag = create_new_favorite_a_tag(link=args.a, name=args.n, soup=soup)
 
     # append a tag to existing soup
     original_found_tag.insert_after(new_a_tag)
