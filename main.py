@@ -1,5 +1,8 @@
 import argparse
-import sys
+from genericpath import isfile
+import os
+from dotenv import load_dotenv, set_key
+import shutil
 
 import bs4
 
@@ -30,6 +33,12 @@ def parse_cli_arguments():
                         help='Flag, if present it lists all groups currently present in the html file.',
                         action='store_true')
 
+    my_parser.add_argument('-o',
+                        metavar='--outputFilePath',
+                        type=str,
+                        help='Specify the Output filepath if you want to customice it',
+                        required=False)
+
 
     # Execute the parse_args() method
     args = my_parser.parse_args()
@@ -37,8 +46,8 @@ def parse_cli_arguments():
 
     return args
 
-def load_html_file():
-    with open("favorites_page.html") as fav_page:
+def load_html_file(path: str):
+    with open(path) as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
     return soup
@@ -69,8 +78,8 @@ def create_new_favorite_a_tag(link: str, name: str, soup):
     new_a_tag.append(name)
     return new_a_tag
 
-def save_soup_to_html_file(soup):
-    with open("favorites_page.html", "w") as outf:
+def save_soup_to_html_file(soup, path: str):
+    with open(path, "w") as outf:
         outf.write(str(soup))
 
 def find_all_current_groups(soup):
@@ -80,10 +89,8 @@ def find_all_current_groups(soup):
         existing_groups.append(group_html.string)
     return existing_groups
 
-def main():
-    args = parse_cli_arguments()
-
-    soup = load_html_file()
+def perform_action(path_read: str, path_write: str, args):
+    soup = load_html_file(path=path_read)
 
     # is the -l flag set?
     if args.l == True:
@@ -103,7 +110,70 @@ def main():
     # append a tag to existing soup
     original_found_tag.insert_after(new_a_tag)
 
-    save_soup_to_html_file(soup=soup)
+    save_soup_to_html_file(soup=soup, path=path_write)
+
+def main():
+    load_dotenv()
+    args = parse_cli_arguments()
+
+    FAVORITESLINKPAGE_DEFAULT_PATH = os.getenv("FAVORITESLINKPAGE_DEFAULT_PATH").strip()
+    FAVORITESLINKPAGE_CUSTOM_PATH = os.getenv("FAVORITESLINKPAGE_CUSTOM_PATH").strip()
+
+    # Fälle:
+    # - kein -o, noch nie -o
+    # - kein -o, aber früher schon mal
+    # - erste Verwendung
+    # - Verwendung mit gleichem Pfad
+    # - Verwendung mit neuem Pfad
+
+    # -o ist not used now and was never used
+    if (args.o is None) and (len(FAVORITESLINKPAGE_CUSTOM_PATH) == 0):
+        perform_action(path_read=FAVORITESLINKPAGE_DEFAULT_PATH,
+                    path_write=FAVORITESLINKPAGE_DEFAULT_PATH,
+                    args=args)
+        return
+
+    # no -o now but from earlier runs
+    if (args.o is None) and (len(FAVORITESLINKPAGE_CUSTOM_PATH) > 0):
+        perform_action(path_read=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    path_write=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    args=args)
+        return
+
+    # First use of -o
+    if (args.o is not None) and (len(FAVORITESLINKPAGE_CUSTOM_PATH) == 0):
+        # set CUSTOM_PATH in env file
+        FAVORITESLINKPAGE_CUSTOM_PATH = args.o.strip()
+        set_key(dotenv_path=".env", key_to_set="FAVORITESLINKPAGE_CUSTOM_PATH", value_to_set=FAVORITESLINKPAGE_CUSTOM_PATH)
+
+        # copy and rename template to new location
+        shutil.copy2(src="./favorites_page_template.html", dst=FAVORITESLINKPAGE_CUSTOM_PATH)
+        perform_action(path_read=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    path_write=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    args=args)
+        return
+
+    # Use of -o with equal path as stored
+    if (args.o is not None) and (args.o.strip() == FAVORITESLINKPAGE_CUSTOM_PATH):
+        perform_action(path_read=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    path_write=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    args=args)
+        return
+
+    # Use of -o with different path as stored
+    if (args.o is not None) and (args.o.strip() != FAVORITESLINKPAGE_CUSTOM_PATH):
+        FAVORITESLINKPAGE_CUSTOM_PATH = args.o.strip()
+        set_key(dotenv_path=".env", key_to_set="FAVORITESLINKPAGE_CUSTOM_PATH", value_to_set=FAVORITESLINKPAGE_CUSTOM_PATH)
+
+        # check if file does not already exists
+        if os.path.isfile(FAVORITESLINKPAGE_CUSTOM_PATH) == False:
+            shutil.copy2(src="./favorites_page_template.html", dst=FAVORITESLINKPAGE_CUSTOM_PATH)
+
+        perform_action(path_read=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    path_write=FAVORITESLINKPAGE_CUSTOM_PATH,
+                    args=args)  
+        return
+
 
 if __name__ == "__main__":
     main()
