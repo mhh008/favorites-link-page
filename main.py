@@ -7,6 +7,11 @@ import shutil
 import bs4
 
 def parse_cli_arguments():
+    """Parse and specify the cli arguments
+
+    Returns:
+        argparse.Namespace: Object that holds all cli arguments, accsessible by given argument name.
+    """
     # Create the parser
     my_parser = argparse.ArgumentParser(description='Add Link to the favorites link page')
 
@@ -47,6 +52,15 @@ def parse_cli_arguments():
     return args
 
 def load_html_file(path: str):
+    """Reads a html file into BeautifulSoup.
+
+    Args:
+        path (str): The path to the html file that should be read.
+
+    Returns:
+        bs4.BeautifulSoup: An object that represents the html file content.
+    """
+    
     with open(path) as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
@@ -118,13 +132,6 @@ def main():
 
     FAVORITESLINKPAGE_DEFAULT_PATH = os.getenv("FAVORITESLINKPAGE_DEFAULT_PATH").strip()
     FAVORITESLINKPAGE_CUSTOM_PATH = os.getenv("FAVORITESLINKPAGE_CUSTOM_PATH").strip()
-
-    # Fälle:
-    # - kein -o, noch nie -o
-    # - kein -o, aber früher schon mal
-    # - erste Verwendung
-    # - Verwendung mit gleichem Pfad
-    # - Verwendung mit neuem Pfad
 
     # -o ist not used now and was never used
     if (args.o is None) and (len(FAVORITESLINKPAGE_CUSTOM_PATH) == 0):
