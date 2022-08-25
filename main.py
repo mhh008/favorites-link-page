@@ -1,5 +1,4 @@
 import argparse
-from genericpath import isfile
 import os
 from dotenv import load_dotenv, set_key
 import shutil
@@ -47,7 +46,7 @@ def parse_cli_arguments():
     return args
 
 def load_html_file(path: str):
-    with open(path) as fav_page:
+    with open(path, encoding="utf-8") as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
     return soup
@@ -79,7 +78,7 @@ def create_new_favorite_a_tag(link: str, name: str, soup):
     return new_a_tag
 
 def save_soup_to_html_file(soup, path: str):
-    with open(path, "w") as outf:
+    with open(path, "w", encoding="utf-8") as outf:
         outf.write(str(soup))
 
 def find_all_current_groups(soup):
