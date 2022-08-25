@@ -51,16 +51,7 @@ def parse_cli_arguments():
     return args
 
 def load_html_file(path: str):
-    """Reads a html file into BeautifulSoup.
-
-    Args:
-        path (str): The path to the html file that should be read.
-
-    Returns:
-        bs4.BeautifulSoup: An object that represents the html file content.
-    """
-    
-    with open(path, encoding="utf-8") as fav_page:
+    with open(path) as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
     return soup
