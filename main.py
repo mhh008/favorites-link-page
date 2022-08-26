@@ -1,4 +1,5 @@
 import argparse
+from ast import arg
 import os
 from dotenv import load_dotenv, set_key
 import shutil
@@ -6,6 +7,11 @@ import shutil
 import bs4
 
 def parse_cli_arguments():
+    """Parse and specify the cli arguments
+
+    Returns:
+        argparse.Namespace: Object that holds all cli arguments, accsessible by given argument name.
+    """
     # Create the parser
     my_parser = argparse.ArgumentParser(description='Add Link to the favorites link page')
 
@@ -46,15 +52,38 @@ def parse_cli_arguments():
     return args
 
 def load_html_file(path: str):
-    with open(path, encoding="utf-8") as fav_page:
+    """Loads a html file into a Beautifulsoup Object
+
+    params:
+        path (str): path to the html file
+
+    Returns:
+        soup (bs4.BeautifulSoup): BeuatifulSoup Object with the html file content    
+    """
+    with open(path) as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
     return soup
 
 def find_group_in_soup(group: str, soup):
+    """Find a group by text within the Beautifulsoup Object
+
+    params:
+        group (str): The name of the group you want to get
+        soup (bs4.BeautifulSoup): The BeautifulSoup object in that you want to search
+
+    Returns:
+        tag (bs4.element.Tag): The found group.
+    """
     return soup.find("h2", string=group)
 
 def create_group_if_not_exists(group: str, soup):
+    """Creates the group in the html object if it does not already exists.
+
+    params:
+        group (str): The name of the group you want to create if not exists
+        soup (bs4.BeautifulSoup): The BeautifulSoup object
+    """
     print("group does not exist")
     
     # new div for the new group
@@ -73,15 +102,39 @@ def create_group_if_not_exists(group: str, soup):
         existing_groups[-1].insert_after(new_div_group_tag)
 
 def create_new_favorite_a_tag(link: str, name: str, soup):
+    """Creats a new html a tag element for a new favorite link.
+
+    params:
+        link (str): Link to the content the a tag should reference to.
+        name (str): Viewd name of the link in the a tag.
+        soup (bs4.BeautifulSoup): The BeautifulSoup object in that you want to create the a tag.
+
+    Returns:
+        tag (bs4.element.Tag): The created a tag.
+    """
     new_a_tag = soup.new_tag("a", href=link, target="_blank")
     new_a_tag.append(name)
     return new_a_tag
 
 def save_soup_to_html_file(soup, path: str):
+    """Saves a bs4 html soup to an html file.
+
+    params:
+        soup (bs4.BeautifulSoup): The BeautifulSoup object that should be stored to an html file.
+        path (str): The Path where to store the file.
+    """
     with open(path, "w", encoding="utf-8") as outf:
         outf.write(str(soup))
 
 def find_all_current_groups(soup):
+    """Find all current favorite groups in a given html soup.
+
+    params:
+        soup (bs4.BeautifulSoup): The BeautifulSoup object in that all groups should be found.
+    
+    returns:
+        existing_groups (list[str]): List of all found groups (as strings).
+    """
     existing_groups_html = soup.find_all("h2")
     existing_groups = []
     for group_html in existing_groups_html:
@@ -89,6 +142,14 @@ def find_all_current_groups(soup):
     return existing_groups
 
 def perform_action(path_read: str, path_write: str, args):
+    """Does determine what action should be performed, depending on the set cli options and already stored preferences.
+
+    params:
+        path_read (str): Path from that the html file should be read.
+        path_write (str): Path to that the modified html file should be written.
+        args (argparse.Namespace): The parsed command line arguments.
+    
+    """
     soup = load_html_file(path=path_read)
 
     # is the -l flag set?
@@ -112,18 +173,13 @@ def perform_action(path_read: str, path_write: str, args):
     save_soup_to_html_file(soup=soup, path=path_write)
 
 def main():
+    """Orchestrates the Main Programm flow
+    """
     load_dotenv()
     args = parse_cli_arguments()
 
     FAVORITESLINKPAGE_DEFAULT_PATH = os.getenv("FAVORITESLINKPAGE_DEFAULT_PATH").strip()
     FAVORITESLINKPAGE_CUSTOM_PATH = os.getenv("FAVORITESLINKPAGE_CUSTOM_PATH").strip()
-
-    # Fälle:
-    # - kein -o, noch nie -o
-    # - kein -o, aber früher schon mal
-    # - erste Verwendung
-    # - Verwendung mit gleichem Pfad
-    # - Verwendung mit neuem Pfad
 
     # -o ist not used now and was never used
     if (args.o is None) and (len(FAVORITESLINKPAGE_CUSTOM_PATH) == 0):

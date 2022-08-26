@@ -1,0 +1,10 @@
+site_name: favorites-link-page documentation
+site_author: Marco Haug
+nav:
+  - Home: index.md
+  - Main: main.md
+theme:
+  name: mkdocs
+
+plugins:
+  - mkdocstrings
