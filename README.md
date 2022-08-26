@@ -22,3 +22,8 @@ Now you are ready to start for developing.
 2. See steps of the Production section to get the newer release
 3. Copy the saved favorites_page.html file in the directory with the newer Release
 4. Ready to work with the new release and keep your already created html page
+
+# MkDocs
+In the project, the automated creation of documentation is basically implemented. The MkDocs module was used for this purpose.
+
+By executing the command mkdocs serve a demonstration of this documentation is created and can be viewed in the browser.
