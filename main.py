@@ -284,6 +284,14 @@ def main():
                     args=args)  
         return
 
+def test():
+    try:
+        raise Exception("Test")
+    except Exception as e:
+        print(e)
+    finally:
+        return
 
 if __name__ == "__main__":
     main()
+    
