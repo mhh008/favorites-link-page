@@ -1,0 +1,2 @@
+class FileEndingError(Exception):
+    pass

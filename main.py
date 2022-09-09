@@ -1,8 +1,9 @@
 import argparse
-from ast import arg
 import os
 from dotenv import load_dotenv, set_key
 import shutil
+
+from custom_Exceptions.FileEndingError import FileEndingError
 
 import bs4
 
@@ -60,6 +61,16 @@ def load_html_file(path: str):
     Returns:
         soup (bs4.BeautifulSoup): BeuatifulSoup Object with the html file content    
     """
+
+    if type(path) != str:
+        raise TypeError(f"Path '{path}' has Type '{type(path)}' but Type 'str' is required.")
+
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Path '{path}' was not found / is no file.")
+
+    if not path.endswith(".html"):
+        raise FileEndingError(f"File with Path '{path}' has not the expected file ending '.html'")
+
     with open(path, "r", encoding="utf-8") as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
@@ -75,6 +86,10 @@ def find_group_in_soup(group: str, soup):
     Returns:
         tag (bs4.element.Tag): The found group.
     """
+
+    if type(group) != str:
+        raise TypeError(f"Group '{group}' has Type '{type(group)}' but Type 'str' is required.")
+
     return soup.find("h2", string=group)
 
 def create_group_if_not_exists(group: str, soup):
@@ -84,6 +99,10 @@ def create_group_if_not_exists(group: str, soup):
         group (str): The name of the group you want to create if not exists
         soup (bs4.BeautifulSoup): The BeautifulSoup object
     """
+
+    if type(group) != str:
+        raise TypeError(f"Group '{group}' has Type '{type(group)}' but Type 'str' is required.")
+
     print("group does not exist")
     
     # new div for the new group
@@ -112,6 +131,13 @@ def create_new_favorite_a_tag(link: str, name: str, soup):
     Returns:
         tag (bs4.element.Tag): The created a tag.
     """
+
+    if type(link) != str:
+        raise TypeError(f"Link '{link}' has Type '{type(link)}' but Type 'str' is required.")
+
+    if type(name) != str:
+        raise TypeError(f"Name '{name}' has Type '{type(name)}' but Type 'str' is required.")
+
     new_a_tag = soup.new_tag("a", href=link, target="_blank")
     new_a_tag.append(name)
     return new_a_tag
@@ -123,6 +149,16 @@ def save_soup_to_html_file(soup, path: str):
         soup (bs4.BeautifulSoup): The BeautifulSoup object that should be stored to an html file.
         path (str): The Path where to store the file.
     """
+
+    if type(path) != str:
+        raise TypeError(f"Path '{path}' has Type '{type(path)}' but Type 'str' is required.")
+
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Path '{path}' was not found / is no file.")
+
+    if not path.endswith(".html"):
+        raise FileEndingError(f"File with Path '{path}' has not the expected file ending '.html'")
+
     with open(path, "w", encoding="utf-8") as outf:
         outf.write(str(soup))
 
@@ -150,6 +186,25 @@ def perform_action(path_read: str, path_write: str, args):
         args (argparse.Namespace): The parsed command line arguments.
     
     """
+
+    if type(path_read) != str:
+        raise TypeError(f"Path_read '{path_read}' has Type '{type(path_read)}' but Type 'str' is required.")
+
+    if not os.path.isfile(path_read):
+        raise FileNotFoundError(f"Path_read '{path_read}' was not found / is no file.")
+
+    if not path_read.endswith(".html"):
+        raise FileEndingError(f"File with Path '{path_read}' has not the expected file ending '.html'")
+
+    if type(path_write) != str:
+        raise TypeError(f"Path_write '{path_write}' has Type '{type(path_write)}' but Type 'str' is required.")
+
+    if not os.path.isfile(path_write):
+        raise FileNotFoundError(f"Path_write '{path_write}' was not found / is no file.")
+
+    if not path_write.endswith(".html"):
+        raise FileEndingError(f"File with Path '{path_write}' has not the expected file ending '.html'")
+
     soup = load_html_file(path=path_read)
 
     # is the -l flag set?
