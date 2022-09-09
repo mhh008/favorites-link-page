@@ -60,7 +60,7 @@ def load_html_file(path: str):
     Returns:
         soup (bs4.BeautifulSoup): BeuatifulSoup Object with the html file content    
     """
-    with open(path) as fav_page:
+    with open(path, "r", encoding="utf-8") as fav_page:
         txt = fav_page.read()
         soup = bs4.BeautifulSoup(txt, features="html.parser")    
     return soup
