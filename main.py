@@ -4,6 +4,8 @@ from dotenv import load_dotenv, set_key
 import shutil
 
 from custom_Exceptions.FileEndingError import FileEndingError
+from Crypto.Cipher import DES, AES
+from Crypto.Random import get_random_bytes
 
 import bs4
 
@@ -284,14 +286,12 @@ def main():
                     args=args)  
         return
 
-def test():
-    try:
-        raise Exception("TEST")
-    except Exception as e:
-        print(e)
-    finally:
-        return
-
 if __name__ == "__main__":
     # main()
-    test()
+    data = b'sona si latine loqueris '
+    key = get_random_bytes(8)
+    cipher = DES.new(key, DES.MODE_OFB)
+    ciphertext = cipher.encrypt(data)
+
+    print(key)
+    print(ciphertext)
